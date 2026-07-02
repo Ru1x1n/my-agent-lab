@@ -14,7 +14,7 @@ response = client.chat.completions.create(
     model="deepseek-chat",
     max_tokens=300,
 messages=[
-        {"role": "user", "content": "deepseek模型1美元大概多少token？"}
+        {"role": "user", "content": "现在是什么时候？"}
     ],
 )
 
