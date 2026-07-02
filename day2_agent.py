@@ -1,43 +1,4 @@
-第一步：
-
-创建虚拟环境,在vscode中termnial使用：
-
-python -m venv .venv
-
-接入deepseek大模型的api：
-
-        import os
-        from dotenv import load_dotenv
-        from openai import OpenAI
-
-        load_dotenv()
-
-        # 关键：指定 DeepSeek 的地址和密钥
-        client = OpenAI(
-            api_key=os.getenv("DEEPSEEK_API_KEY"),
-            base_url="https://api.deepseek.com"
-        )
-
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            max_tokens=300,
-            messages=[
-                {"role": "user", "content": "用一句话解释什么是 AI Agent"}
-            ],
-        )
-
-        print(response.choices[0].message.content)
-
-重点的参数理解：
-        ![alt text](8b8e7ee7-7429-489d-97db-c90915ef350d.png)
-
-第二天：今天做的是一个真正的agent，昨天的还是更像一个聊天机器人，比起agent，他还是用一个已经冻结的训练数据，他可能不准确，没法用最新的数据准确回答。区别是agent可以自己动手查东西拿工具啥的。
-
-今天实施这个agent。
-
-项目文件夹新建一个day2_agent.py
-
-        import os
+import os
 import json
 from datetime import datetime
 from dotenv import load_dotenv
@@ -63,10 +24,6 @@ def get_current_time() -> str:
     """返回当前的日期和时间。"""
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-注意这里eval会执行任何代码，实际业务开发中不要使用。
-
-
-tools描述：模型不知道我写的代码，所以要用json格式介绍给他，这里叫做tools描述。 不需要有具体的代码等等，只需要给他描述基本的名字功能输入输出就可以
 
 tools = [
     {
@@ -97,12 +54,6 @@ tools = [
 ]
 
 
-这里描述了一个单机的计算器功能和返回时间的功能，后续可以继续弄一些联网的工具，这样就可以返回一些需要实时搜索的东西。
-
-
-写一个工具调度台：
-
-# 名字 -> 真实函数的对照表
 available_tools = {
     "calculator": calculator,
     "get_current_time": get_current_time,
@@ -116,10 +67,6 @@ def run_tool(name, arguments):
     # arguments 是模型给的 JSON 字符串，先转成字典
     args = json.loads(arguments)
     return func(**args)
-
-这里的作用是把所有待用的函数传给agent，然后run_tool要求用户传入需要用的函数的名字和参数，没有的话就报错。
-
-写一个agent主循环：
 
 
 
@@ -182,6 +129,3 @@ if __name__ == "__main__":
         print(f"提问: {q}")
         answer = run_agent(q)
         print(f"最终回答: {answer}")
-
-开头先用role等于system设定好agent的角色，设定好的模型和能用的工具。分为三种情况，如果模型没用工具直接返回结果，没有什么特别有用的训练。如果   模型要用工具，就挨个排查每个可能用到的工具然后返回结果，然后把 结果喂给模型增加实力。
-
