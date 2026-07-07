@@ -5,6 +5,12 @@ from rag import build_knowledge_base
 from assistant import answer, deep_research
 from agents import research_team
 
+import streamlit as st
+import tempfile
+import os
+from loader import clean_text
+from rag import build_knowledge_base
+from langchain_community.document_loaders import TextLoader, PyPDFLoader
 st.set_page_config(page_title="智能研究助手", page_icon="🔍", layout="centered")
 st.title("🔍 智能研究助手")
 st.caption("基于 RAG 与多智能体协作，能读懂你的文档并深度研究")
@@ -67,3 +73,38 @@ with st.sidebar:
     st.metric("调用次数", metrics.call_count)
     st.metric("消耗 Token", metrics.total_input + metrics.total_output)
     st.metric("预估成本", f"{metrics.cost():.4f} 元")
+
+with st.sidebar:
+    st.header("📄 上传你的文档")
+    uploaded_files = st.file_uploader(
+        "上传 txt 或 pdf 文档",
+        type=["txt", "pdf"],
+        accept_multiple_files=True,   # 允许传多个
+    )
+
+    if uploaded_files:
+        if st.button("用这些文档建知识库"):
+            with st.spinner("正在处理文档..."):
+                all_docs = []
+                for uf in uploaded_files:
+                    # 把上传的文件存成临时文件（loader 需要文件路径）
+                    suffix = ".pdf" if uf.name.endswith(".pdf") else ".txt"
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                        tmp.write(uf.getvalue())
+                        tmp_path = tmp.name
+
+                    # 用对应的加载器读取
+                    if suffix == ".pdf":
+                        docs = PyPDFLoader(tmp_path).load()
+                    else:
+                        docs = TextLoader(tmp_path, encoding="utf-8").load()
+
+                    for d in docs:
+                        d.page_content = clean_text(d.page_content)
+                    all_docs.extend(docs)
+                    os.remove(tmp_path)   # 删掉临时文件
+
+                # 用上传的文档建知识库
+                build_knowledge_base(all_docs)
+                st.session_state.kb_ready = True
+                st.success(f"已处理 {len(uploaded_files)} 个文档，可以提问了！")
