@@ -22,6 +22,8 @@ DEEPSEEK_API_KEY = get_key("DEEPSEEK_API_KEY")
 ZHIPU_API_KEY = get_key("ZHIPU_API_KEY")
 TAVILY_API_KEY = get_key("TAVILY_API_KEY")
 
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+CHAT_MODEL = "deepseek-v4-flash"
 # 可选：检查必需密钥是否存在
 if not DEEPSEEK_API_KEY:
     print("警告: DEEPSEEK_API_KEY 未设置")
