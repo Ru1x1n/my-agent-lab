@@ -39,3 +39,5 @@ import os
 # 基于 config.py 的位置定位 documents，不管从哪运行都对
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DOCUMENTS_DIR = os.path.join(BASE_DIR, "documents")
+
+EMBED_MODEL = "embedding-3"
